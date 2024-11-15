@@ -1,0 +1,53 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Mbectemi
+      POSTGRES_DB: nestJs-221
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: E:/NextJs/gestion-boutique-221
+      dockerfile: Dockerfile  # or replace with the correct path if the Dockerfile is named differently
+    volumes:
+      - E:/NextJs/gestion-boutique-221:/app  # Mount backend project folder
+      - /app/node_modules             # Ignore `node_modules` in the host
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://postgres:Mbectemi@db:5432/nestJs-221?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    working_dir: /app
+    command: npm run start:dev  # Ensure `start:dev` is defined in `package.json` scripts
+
+  web:
+    build:
+      context: E:/JS/gestion-dette-221-react
+      dockerfile: Dockerfile  # or replace with the correct path if the Dockerfile is named differently
+    volumes:
+      - E:/JS/gestion-dette-221-react:/app  # Mount frontend project folder
+      - /app/node_modules               # Ignore `node_modules` in the host
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_BASE_URL: http://localhost:3001/api
+    depends_on:
+      - api
+    working_dir: /app
+    command: npm run dev  # Ensure `dev` is defined in `package.json` scripts
+
+volumes:
+  postgres_data:
