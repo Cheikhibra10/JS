@@ -12,8 +12,8 @@ export default function LoginPage() {
     const handleConnexion = async (credentials: Credentials) => {
         try {
             const res = await authService.login(credentials);
-            console.log("Login Response:", res.data.data.token);
-            const { token, user } = res.data.data;
+            console.log("Login Response:", res.data.token);
+            const { token, user } = res.data;
     
             console.log("Token before saving:", token);
             authService.saveToken(token);

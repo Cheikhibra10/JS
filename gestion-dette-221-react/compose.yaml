@@ -1,9 +1,10 @@
-version: '3.8'
+version: "3.9"
+
 services:
   db:
     image: postgres:latest
-    ports:
-      - "5432:5432"
+    container_name: db
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Mbectemi
@@ -16,38 +17,50 @@ services:
       timeout: 5s
       retries: 5
 
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5051:80"  
+    depends_on:
+      - db
   api:
     build:
-      context: E:/NextJs/gestion-boutique-221
-      dockerfile: Dockerfile  # or replace with the correct path if the Dockerfile is named differently
+      context: C:\Users\pc\Documents\NestJsBackend
+      dockerfile: Dockerfile
+    command: sh -c "npx prisma db push && npm run start:dev"  
     volumes:
-      - E:/NextJs/gestion-boutique-221:/app  # Mount backend project folder
-      - /app/node_modules             # Ignore `node_modules` in the host
+      - C:\Users\pc\Documents\NestJsBackend:/app
+      - /app/node_modules
     ports:
-      - "3001:3001"
+      - "3000:3000"
     environment:
       DATABASE_URL: postgresql://postgres:Mbectemi@db:5432/nestJs-221?schema=public
+      JSECRET_ACCESS_TOKEN: ${JSECRET_ACCESS_TOKEN}
+      JSECRET_TIME_TO_EXPIRE: 1d
     depends_on:
       db:
         condition: service_healthy
     working_dir: /app
-    command: npm run start:dev  # Ensure `start:dev` is defined in `package.json` scripts
 
   web:
     build:
-      context: E:/JS/gestion-dette-221-react
-      dockerfile: Dockerfile  # or replace with the correct path if the Dockerfile is named differently
+      context: C:\Users\pc\Documents\JS\gestion-dette-221-react
+      dockerfile: Dockerfile
     volumes:
-      - E:/JS/gestion-dette-221-react:/app  # Mount frontend project folder
-      - /app/node_modules               # Ignore `node_modules` in the host
+      - C:\Users\pc\Documents\JS\gestion-dette-221-react:/app
+      - /app/node_modules
     ports:
       - "5173:5173"
     environment:
-      VITE_BASE_URL: http://localhost:3001/api
+      VITE_BASE_URL: http://localhost:3000/api
     depends_on:
       - api
     working_dir: /app
-    command: npm run dev  # Ensure `dev` is defined in `package.json` scripts
+    command: npm run dev
 
 volumes:
   postgres_data:
